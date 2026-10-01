@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f4f2e9">
+	<title>DILO · Juego de traducción</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			color-scheme: light;
+			--paper: #f4f2e9;
+			--ink: #1e302c;
+			--muted: #69736d;
+			--line: #d5d9cf;
+			--leaf: #dce8dc;
+			--leaf-dark: #c8d9c9;
+			--coral: #ec6546;
+			--coral-dark: #d84e33;
+			--blue: #4b7895;
+			--yellow: #f1cc60;
+			--white: #fffef9;
+			--good: #26765b;
+			--bad: #bd4835;
+			font-family: "DM Sans", sans-serif;
+			color: var(--ink);
+			background: var(--paper);
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			background-color: var(--paper);
+			background-image: linear-gradient(rgba(30, 48, 44, .025) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(30, 48, 44, .025) 1px, transparent 1px);
+			background-size: 28px 28px;
+		}
+
+		button { font: inherit; }
+
+		.page-shell {
+			width: min(1120px, calc(100% - 64px));
+			margin: 0 auto;
+		}
+
+		.topbar {
+			min-height: 82px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			color: var(--ink);
+			text-decoration: none;
+		}
+
+		.brand-mark {
+			width: 34px;
+			height: 34px;
+			display: grid;
+			place-items: center;
+			color: var(--paper);
+			background: var(--coral);
+			border-radius: 50% 50% 50% 8px;
+			font-family: "Bricolage Grotesque", sans-serif;
+			font-size: 21px;
+			font-weight: 800;
+			transform: rotate(-8deg);
+		}
+
+		.brand-name {
+			font-family: "Bricolage Grotesque", sans-serif;
+			font-size: 21px;
+			font-weight: 800;
+		}
+
+		.brand-subtitle {
+			margin-left: 2px;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.language-tag {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			padding: 9px 13px;
+			border: 1px solid var(--line);
+			border-radius: 3px;
+			color: var(--ink);
+			background: rgba(255, 254, 249, .55);
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: .04em;
+		}
+
+		.language-arrow { color: var(--coral-dark); font-size: 16px; }
+
+		main { padding: 46px 0 52px; }
+
+		.game-grid {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) 300px;
+			gap: 72px;
+			align-items: stretch;
+		}
+
+		.play-column { min-width: 0; }
+
+		.eyebrow {
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			margin: 0 0 14px;
+			color: var(--blue);
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+
+		.eyebrow::before {
+			width: 23px;
+			height: 2px;
+			content: "";
+			background: var(--coral);
+		}
+
+		h1 {
+			max-width: 570px;
+			margin: 0;
+			font-family: "Bricolage Grotesque", sans-serif;
+			font-size: 48px;
+			font-weight: 700;
+			line-height: 1.02;
+		}
+
+		h1 span { color: var(--coral-dark); }
+
+		.intro {
+			margin: 14px 0 0;
+			color: var(--muted);
+			font-size: 15px;
+			line-height: 1.55;
+		}
+
+		.level-section { margin-top: 30px; }
+
+		.section-label {
+			display: block;
+			margin-bottom: 10px;
+			color: var(--muted);
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+		}
+
+		.level-picker {
+			display: inline-flex;
+			max-width: 100%;
+			gap: 4px;
+			padding: 4px;
+			border: 1px solid var(--line);
+			border-radius: 4px;
+			background: rgba(255, 254, 249, .68);
+		}
+
+		.level-button {
+			min-width: 95px;
+			min-height: 38px;
+			padding: 7px 12px;
+			border: 0;
+			border-radius: 2px;
+			color: var(--muted);
+			background: transparent;
+			cursor: pointer;
+			font-size: 13px;
+			font-weight: 700;
+			transition: color 140ms ease, background 140ms ease;
+		}
+
+		.level-button[aria-pressed="true"] {
+			color: var(--white);
+			background: var(--ink);
+		}
+
+		.level-button:focus-visible,
+		.mic-button:focus-visible {
+			outline: 3px solid var(--blue);
+			outline-offset: 3px;
+		}
+
+		.prompt-stage {
+			position: relative;
+			min-height: 232px;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			margin-top: 25px;
+			padding: 23px 27px 27px;
+			overflow: hidden;
+			background: var(--leaf);
+			border-left: 4px solid var(--leaf-dark);
+		}
+
+		.prompt-stage::after {
+			position: absolute;
+			right: -20px;
+			bottom: -47px;
+			width: 165px;
+			height: 165px;
+			border: 1px solid rgba(30, 48, 44, .12);
+			border-radius: 50%;
+			box-shadow: 0 0 0 15px rgba(30, 48, 44, .035), 0 0 0 31px rgba(30, 48, 44, .025);
+			content: "";
+			pointer-events: none;
+		}
+
+		.prompt-topline {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			color: #53665a;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+		}
+
+		.prompt-word {
+			position: relative;
+			z-index: 1;
+			margin: 17px 0 2px;
+			overflow-wrap: anywhere;
+			font-family: "Bricolage Grotesque", sans-serif;
+			font-size: 72px;
+			font-weight: 700;
+			line-height: .98;
+		}
+
+		.prompt-hint {
+			margin: 8px 0 0;
+			color: #53665a;
+			font-size: 13px;
+		}
+
+		.mic-area {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 25px 10px 0;
+			text-align: center;
+		}
+
+		.mic-button {
+			min-width: 244px;
+			min-height: 58px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 11px;
+			padding: 12px 22px;
+			border: 0;
+			border-radius: 3px;
+			color: var(--white);
+			background: var(--coral);
+			box-shadow: 0 4px 0 var(--coral-dark);
+			cursor: pointer;
+			font-size: 15px;
+			font-weight: 700;
+			transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+		}
+
+		.mic-button:hover:not(:disabled) {
+			background: var(--coral-dark);
+			transform: translateY(-1px);
+			box-shadow: 0 5px 0 #b43d29;
+		}
+
+		.mic-button:active:not(:disabled) {
+			transform: translateY(2px);
+			box-shadow: 0 2px 0 #b43d29;
+		}
+
+		.mic-button:disabled {
+			cursor: not-allowed;
+			opacity: .58;
+		}
+
+		.mic-glyph { font-size: 20px; line-height: 1; }
+
+		.sound-bars {
+			height: 17px;
+			display: none;
+			align-items: center;
+			gap: 3px;
+		}
+
+		.sound-bars i {
+			width: 3px;
+			height: 6px;
+			display: block;
+			border-radius: 2px;
+			background: currentColor;
+			animation: sound-wave 650ms ease-in-out infinite alternate;
+		}
+
+		.sound-bars i:nth-child(2) { animation-delay: 120ms; }
+		.sound-bars i:nth-child(3) { animation-delay: 240ms; }
+		.sound-bars i:nth-child(4) { animation-delay: 360ms; }
+		.sound-bars i:nth-child(5) { animation-delay: 180ms; }
+
+		.mic-button.is-listening .sound-bars { display: inline-flex; }
+		.mic-button.is-listening .mic-glyph { display: none; }
+
+		@keyframes sound-wave {
+			to { height: 16px; }
+		}
+
+		.status-message {
+			min-height: 24px;
+			max-width: 440px;
+			margin: 15px 0 0;
+			color: var(--muted);
+			font-size: 13px;
+			line-height: 1.5;
+		}
+
+		.status-message[data-tone="good"] { color: var(--good); font-weight: 700; }
+		.status-message[data-tone="bad"] { color: var(--bad); font-weight: 700; }
+		.status-message[data-tone="warning"] { color: #805d13; }
+
+		.support-note {
+			margin: 4px 0 0;
+			color: #879087;
+			font-size: 11px;
+			line-height: 1.5;
+		}
+
+		.score-column {
+			display: flex;
+			flex-direction: column;
+			padding: 4px 0 0 27px;
+			border-left: 1px solid var(--line);
+		}
+
+		.score-heading {
+			margin: 0;
+			color: var(--muted);
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+
+		.score-value {
+			margin: 7px 0 0;
+			font-family: "Bricolage Grotesque", sans-serif;
+			font-size: 76px;
+			font-weight: 700;
+			line-height: 1;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.score-caption {
+			margin: 5px 0 0;
+			color: var(--muted);
+			font-size: 13px;
+		}
+
+		.score-divider {
+			height: 1px;
+			margin: 25px 0 19px;
+			border: 0;
+			background: var(--line);
+		}
+
+		.stats-list { margin: 0; }
+
+		.stat-row {
+			display: flex;
+			align-items: baseline;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 10px 0;
+			border-bottom: 1px solid rgba(213, 217, 207, .72);
+		}
+
+		.stat-row dt { color: var(--muted); font-size: 13px; }
+		.stat-row dd {
+			margin: 0;
+			font-family: "Bricolage Grotesque", sans-serif;
+			font-size: 19px;
+			font-weight: 700;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.last-result {
+			margin-top: auto;
+			padding-top: 25px;
+		}
+
+		.last-result-label {
+			margin: 0 0 8px;
+			color: var(--muted);
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+		}
+
+		.last-result-text {
+			min-height: 24px;
+			margin: 0;
+			font-size: 14px;
+			font-weight: 600;
+			line-height: 1.5;
+			overflow-wrap: anywhere;
+		}
+
+		.footer-note {
+			display: flex;
+			justify-content: space-between;
+			gap: 20px;
+			padding: 15px 0 19px;
+			border-top: 1px solid var(--line);
+			color: #7d867e;
+			font-size: 11px;
+			line-height: 1.5;
+		}
+
+		@media (max-width: 760px) {
+			.page-shell { width: min(100% - 36px, 560px); }
+			.topbar { min-height: 70px; }
+			.brand-subtitle { display: none; }
+			main { padding: 32px 0 36px; }
+			.game-grid { grid-template-columns: 1fr; gap: 35px; }
+			h1 { font-size: 40px; }
+			.prompt-stage { min-height: 205px; margin-top: 22px; padding: 19px 20px 22px; }
+			.prompt-word { font-size: 60px; }
+			.mic-area { padding-top: 21px; }
+			.score-column {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				column-gap: 18px;
+				padding: 20px 0 0;
+				border-top: 1px solid var(--line);
+				border-left: 0;
+			}
+			.score-summary { grid-column: 1; }
+			.score-value { font-size: 58px; }
+			.score-divider { display: none; }
+			.stats-list { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+			.last-result { grid-column: 1 / -1; padding-top: 16px; }
+			.footer-note { flex-direction: column; gap: 4px; }
+		}
+
+		@media (max-width: 390px) {
+			.page-shell { width: calc(100% - 28px); }
+			.language-tag { padding: 8px 9px; font-size: 11px; }
+			h1 { font-size: 36px; }
+			.level-button { min-width: 82px; padding: 7px 8px; font-size: 12px; }
+			.prompt-word { font-size: 52px; }
+			.mic-button { min-width: min(244px, 100%); }
+			.score-column { column-gap: 10px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after {
+				scroll-behavior: auto !important;
+				animation-duration: .01ms !important;
+				animation-iteration-count: 1 !important;
+				transition-duration: .01ms !important;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="page-shell">
+		<header class="topbar">
+			<a class="brand" href="#" aria-label="DILO, inicio del juego">
+				<span class="brand-mark" aria-hidden="true">D</span>
+				<span class="brand-name">DILO</span>
+				<span class="brand-subtitle">práctica oral</span>
+			</a>
+			<div class="language-tag" aria-label="Traducción de español a inglés">
+				<span>ESPAÑOL</span><span class="language-arrow" aria-hidden="true">→</span><span>ENGLISH</span>
+			</div>
+		</header>
+
+		<main>
+			<div class="game-grid">
+				<section class="play-column" aria-labelledby="page-title">
+					<p class="eyebrow">Reto de vocabulario</p>
+					<h1 id="page-title">Una palabra.<br><span>En inglés.</span></h1>
+					<p class="intro">Escucha, piensa y di la traducción en voz alta.</p>
+
+					<div class="level-section">
+						<span class="section-label" id="level-label">Elige dificultad</span>
+						<div class="level-picker" role="group" aria-labelledby="level-label">
+							<button class="level-button" type="button" data-level="facil" aria-pressed="true">Fácil</button>
+							<button class="level-button" type="button" data-level="medio" aria-pressed="false">Medio</button>
+							<button class="level-button" type="button" data-level="dificil" aria-pressed="false">Difícil</button>
+						</div>
+					</div>
+
+					<section class="prompt-stage" aria-label="Palabra para traducir">
+						<div class="prompt-topline">
+							<span>Traduce al inglés</span>
+							<span id="round-label">Ronda 01</span>
+						</div>
+						<div>
+							<p class="prompt-word" id="spanish-word">gato</p>
+							<p class="prompt-hint">Di la palabra en inglés</p>
+						</div>
+					</section>
+
+					<div class="mic-area">
+						<button class="mic-button" id="mic-button" type="button" aria-describedby="mic-status">
+							<span class="mic-glyph" aria-hidden="true">🎙</span>
+							<span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+							<span id="mic-button-label">Hablar respuesta</span>
+						</button>
+						<p class="status-message" id="mic-status" role="status" aria-live="polite">Pulsa el botón y permite el acceso al micrófono para empezar.</p>
+						<p class="support-note">El reconocimiento de voz requiere conexión a Internet.</p>
+					</div>
+				</section>
+
+				<aside class="score-column" aria-label="Marcador de la partida">
+					<div class="score-summary">
+						<p class="score-heading">Tu puntuación</p>
+						<p class="score-value" id="score-value" aria-live="polite">0</p>
+						<p class="score-caption">puntos</p>
+					</div>
+					<hr class="score-divider">
+					<dl class="stats-list">
+						<div class="stat-row"><dt>Rondas</dt><dd id="round-count">0</dd></div>
+						<div class="stat-row"><dt>Correctas</dt><dd id="correct-count">0</dd></div>
+						<div class="stat-row"><dt>Racha</dt><dd id="streak-count">0</dd></div>
+					</dl>
+					<div class="last-result">
+						<p class="last-result-label">Última respuesta</p>
+						<p class="last-result-text" id="last-result">Aún no has jugado</p>
+					</div>
+				</aside>
+			</div>
+		</main>
+
+		<footer class="footer-note">
+			<span>Una respuesta correcta suma 1 punto; una incorrecta resta 1.</span>
+			<span>Reconocimiento de voz · English (US)</span>
+		</footer>
+	</div>
+
+	<script>
+		const wordBanks = {
+			facil: ["gato", "perro", "manzana", "leche", "sol"],
+			medio: ["banano", "escuela", "amigo", "ventana", "amarillo"],
+			dificil: ["tecnologia", "universidad", "informacion", "pronunciacion", "imaginacion"]
+		};
+
+		const translations = {
+			gato: "cat",
+			perro: "dog",
+			manzana: "apple",
+			leche: "milk",
+			sol: "sun",
+			banano: "banana",
+			escuela: "school",
+			amigo: "friend",
+			ventana: "window",
+			amarillo: "yellow",
+			tecnologia: "technology",
+			universidad: "university",
+			informacion: "information",
+			pronunciacion: "pronunciation",
+			imaginacion: "imagination"
+		};
+
+		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+		const micButton = document.querySelector("#mic-button");
+		const micButtonLabel = document.querySelector("#mic-button-label");
+		const statusMessage = document.querySelector("#mic-status");
+		const spanishWordElement = document.querySelector("#spanish-word");
+		const roundLabel = document.querySelector("#round-label");
+		const scoreValue = document.querySelector("#score-value");
+		const roundCount = document.querySelector("#round-count");
+		const correctCount = document.querySelector("#correct-count");
+		const streakCount = document.querySelector("#streak-count");
+		const lastResult = document.querySelector("#last-result");
+		const levelButtons = [...document.querySelectorAll(".level-button")];
+
+		let currentLevel = "facil";
+		let currentWord = "gato";
+		let score = 0;
+		let rounds = 0;
+		let correctAnswers = 0;
+		let streak = 0;
+		let recognition = null;
+		let isListening = false;
+		let feedbackActive = false;
+		let nextWordTimer = null;
+
+		function normalize(text) {
+			return text.normalize("NFD")
+				.replace(/[\u0300-\u036f]/g, "")
+				.toLocaleLowerCase("en-US")
+				.replace(/[^\w\s]/g, "")
+				.trim();
+		}
+
+		function chooseWord() {
+			const choices = wordBanks[currentLevel].filter(word => word !== currentWord);
+			const nextWord = choices[Math.floor(Math.random() * choices.length)];
+			currentWord = nextWord;
+			spanishWordElement.textContent = currentWord;
+			roundLabel.textContent = `Ronda ${String(rounds + 1).padStart(2, "0")}`;
+		}
+
+		function setStatus(message, tone = "") {
+			statusMessage.textContent = message;
+			statusMessage.dataset.tone = tone;
+		}
+
+		function setListening(listening) {
+			isListening = listening;
+			micButton.classList.toggle("is-listening", listening);
+			micButton.disabled = listening || feedbackActive;
+			micButtonLabel.textContent = listening ? "Escuchando..." : "Hablar respuesta";
+		}
+
+		function updateScoreboard() {
+			scoreValue.textContent = score;
+			roundCount.textContent = rounds;
+			correctCount.textContent = correctAnswers;
+			streakCount.textContent = streak;
+		}
+
+		function finishRound(transcript) {
+			const isCorrect = normalize(transcript) === normalize(translations[currentWord]);
+			rounds += 1;
+			feedbackActive = true;
+			setListening(false);
+			micButton.disabled = true;
+
+			if (isCorrect) {
+				score += 1;
+				correctAnswers += 1;
+				streak += 1;
+				setStatus(`¡Correcto! “${currentWord}” se dice “${translations[currentWord]}”. +1 punto`, "good");
+				lastResult.textContent = `“${currentWord}” → “${translations[currentWord]}” · +1`;
+				lastResult.style.color = "var(--good)";
+			} else {
+				score -= 1;
+				streak = 0;
+				setStatus(`Oí “${transcript}”. La respuesta era “${translations[currentWord]}”. −1 punto`, "bad");
+				lastResult.textContent = `“${currentWord}” → “${translations[currentWord]}” · −1`;
+				lastResult.style.color = "var(--bad)";
+			}
+
+			roundLabel.textContent = `Ronda ${String(rounds).padStart(2, "0")}`;
+			updateScoreboard();
+			nextWordTimer = window.setTimeout(() => {
+				feedbackActive = false;
+				chooseWord();
+				setStatus("Pulsa el botón y di la traducción en inglés.");
+				micButton.disabled = false;
+			}, 1700);
+		}
+
+		function startListening() {
+			if (!SpeechRecognition) {
+				setStatus("Este navegador no admite reconocimiento de voz. Prueba con Chrome o Edge.", "warning");
+				return;
+			}
+
+			if (isListening || feedbackActive) return;
+
+			recognition = new SpeechRecognition();
+			recognition.lang = "en-US";
+			recognition.continuous = false;
+			recognition.interimResults = true;
+			recognition.maxAlternatives = 1;
+			let receivedFinalResult = false;
+
+			recognition.onstart = () => {
+				setListening(true);
+				setStatus("Te escucho... di la traducción ahora.");
+			};
+
+			recognition.onresult = event => {
+				let interimTranscript = "";
+				for (let index = event.resultIndex; index < event.results.length; index += 1) {
+					const result = event.results[index];
+					if (result.isFinal) {
+						receivedFinalResult = true;
+						const transcript = result[0].transcript.trim();
+						if (normalize(transcript) === "quit" || normalize(transcript) === "exit") {
+							setListening(false);
+							setStatus("Partida terminada. Puedes volver a jugar cuando quieras.");
+							lastResult.textContent = `Puntuación final: ${score}`;
+							return;
+						}
+						finishRound(transcript);
+						return;
+					}
+					interimTranscript += result[0].transcript;
+				}
+
+				if (interimTranscript) setStatus(`Te escucho: “${interimTranscript.trim()}”`);
+			};
+
+			recognition.onerror = event => {
+				setListening(false);
+				const messages = {
+					"not-allowed": "No hay permiso para usar el micrófono. Actívalo en los permisos del navegador.",
+					"service-not-allowed": "El navegador bloqueó el reconocimiento de voz.",
+					"network": "No hay conexión con el servicio de voz. Comprueba Internet e inténtalo otra vez.",
+					"no-speech": "No detecté voz. Pulsa el botón para intentarlo otra vez; no pierdes puntos."
+				};
+				setStatus(messages[event.error] || "No pude reconocer el audio. Inténtalo otra vez; no pierdes puntos.", "warning");
+			};
+
+			recognition.onend = () => {
+				if (isListening && !receivedFinalResult) {
+					setListening(false);
+					setStatus("No se recibió una respuesta. Pulsa para intentarlo otra vez; no pierdes puntos.", "warning");
+				}
+			};
+
+			try {
+				recognition.start();
+			} catch (error) {
+				setListening(false);
+				setStatus("No pude iniciar el micrófono. Revisa sus permisos e inténtalo otra vez.", "warning");
+			}
+		}
+
+		levelButtons.forEach(button => {
+			button.addEventListener("click", () => {
+				if (isListening && recognition) recognition.abort();
+				if (nextWordTimer) window.clearTimeout(nextWordTimer);
+				feedbackActive = false;
+				setListening(false);
+				currentLevel = button.dataset.level;
+				levelButtons.forEach(levelButton => {
+					levelButton.setAttribute("aria-pressed", String(levelButton === button));
+				});
+				chooseWord();
+				setStatus("Nivel cambiado. Pulsa el botón y di la traducción en inglés.");
+				micButton.disabled = !SpeechRecognition;
+			});
+		});
+
+		micButton.addEventListener("click", startListening);
+
+		if (!SpeechRecognition) {
+			micButton.disabled = true;
+			setStatus("El reconocimiento de voz no está disponible en este navegador. Abre el juego en Chrome o Edge.", "warning");
+		}
+	</script>
+</body>
+</html>
